@@ -1,0 +1,10 @@
+project_id = "bitelens"
+
+[functions.analyze-meal]
+verify_jwt = true
+
+[functions.revenuecat-webhook]
+verify_jwt = false
+
+[functions.delete-account]
+verify_jwt = true
