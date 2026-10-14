@@ -10,6 +10,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/widgets/app_snackbar.dart';
 import '../../core/widgets/glass_card.dart';
 import '../../data/providers/app_providers.dart';
+import '../../data/services/food_ai_service.dart';
 
 /// Settings screen providing account management, unit & theme preferences,
 /// subscription management, and account deletion.
@@ -110,6 +111,86 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     }
   }
 
+  Future<void> _configureGeminiApiKey() async {
+    final prefs = ref.read(sharedPreferencesProvider);
+    final currentKey = prefs.getString(FoodAIService.geminiKeyStorageKey) ?? '';
+    final controller = TextEditingController(text: currentKey);
+
+    final saved = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.auto_awesome, color: AppColors.primaryGreen, size: 24),
+            SizedBox(width: 8),
+            Text('Gemini AI Setup', style: TextStyle(fontSize: 18)),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Enter your Google Gemini API Key for direct real-time food and calorie recognition:',
+              style: TextStyle(fontSize: 13, color: Colors.grey),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: controller,
+              decoration: const InputDecoration(
+                hintText: 'AIzaSy...',
+                labelText: 'Gemini API Key',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.vpn_key_rounded),
+              ),
+              obscureText: true,
+            ),
+          ],
+        ),
+        actions: [
+          if (currentKey.isNotEmpty)
+            TextButton(
+              onPressed: () {
+                prefs.remove(FoodAIService.geminiKeyStorageKey);
+                Navigator.pop(ctx, true);
+              },
+              child: const Text('Clear', style: TextStyle(color: Colors.red)),
+            ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              final newKey = controller.text.trim();
+              if (newKey.isNotEmpty) {
+                prefs.setString(FoodAIService.geminiKeyStorageKey, newKey);
+              } else {
+                prefs.remove(FoodAIService.geminiKeyStorageKey);
+              }
+              Navigator.pop(ctx, true);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primaryGreen,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+
+    if (saved == true && mounted) {
+      final updatedKey = prefs.getString(FoodAIService.geminiKeyStorageKey);
+      if (updatedKey != null && updatedKey.isNotEmpty) {
+        AppSnackbar.showSuccess(context, 'Gemini API Key saved successfully!');
+      } else {
+        AppSnackbar.showInfo(context, 'Using smart food recognition.');
+      }
+      setState(() {});
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -199,6 +280,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         }
                       },
                     ),
+                  ),
+                  const Divider(height: 1),
+                  ListTile(
+                    leading: const Icon(Icons.auto_awesome, color: AppColors.primaryGreen),
+                    title: const Text('Google Gemini Vision AI'),
+                    subtitle: Text(
+                      ref.watch(sharedPreferencesProvider).getString(FoodAIService.geminiKeyStorageKey)?.isNotEmpty == true
+                          ? 'Active (Custom Gemini Key)'
+                          : 'Smart Recognition Active (Tap to set Key)',
+                    ),
+                    trailing: const Icon(Icons.chevron_right_rounded),
+                    onTap: _configureGeminiApiKey,
                   ),
                 ],
               ),

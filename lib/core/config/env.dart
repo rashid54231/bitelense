@@ -23,6 +23,11 @@ class Env {
     defaultValue: 'appl_placeholder',
   );
 
+  static const String geminiApiKey = String.fromEnvironment(
+    'GEMINI_API_KEY',
+    defaultValue: '',
+  );
+
   static const String privacyPolicyUrl = String.fromEnvironment(
     'PRIVACY_POLICY_URL',
     defaultValue: 'https://bitelens.app/privacy',

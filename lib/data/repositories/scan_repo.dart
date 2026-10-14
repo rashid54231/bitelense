@@ -1,15 +1,19 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/errors/app_exception.dart';
 import '../../core/utils/formatters.dart';
 import '../models/scan_analysis.dart';
+import '../services/food_ai_service.dart';
 
-/// Repository for uploading food photos and calling the `analyze-meal` Edge Function.
+/// Repository for uploading food photos and calling the `analyze-meal` Edge Function
+/// with automatic direct Gemini Vision / smart analyzer fallback.
 class ScanRepo {
   final SupabaseClient _client;
+  final SharedPreferences _prefs;
 
-  ScanRepo(this._client);
+  ScanRepo(this._client, this._prefs);
 
   static const int freeDailyLimit = 3;
 
@@ -68,14 +72,14 @@ class ScanRepo {
     }
   }
 
-  /// Calls the `analyze-meal` edge function.
-  /// On error, deletes the uploaded photo so no orphan storage files remain.
+  /// Analyzes food photo via Supabase Edge Function with seamless direct Gemini Vision fallback.
   Future<ScanAnalysis> analyzeMeal({
     required String imagePath,
     required String mealType,
+    File? localFile,
   }) async {
+    // 1. Attempt Supabase Edge Function first if deployed
     try {
-      // Local IANA timezone name or default
       final tzName = DateTime.now().timeZoneName;
 
       final response = await _client.functions.invoke(
@@ -91,7 +95,6 @@ class ScanRepo {
       final data = response.data;
 
       if (status == 429 || (data is Map && data['error']?['code'] == 'LIMIT_REACHED')) {
-        // Free quota exceeded
         await deleteUploadedPhoto(imagePath);
         throw const AppException(
           code: 'LIMIT_REACHED',
@@ -100,15 +103,15 @@ class ScanRepo {
         );
       }
 
-      if (status != 200 || data == null) {
-        await deleteUploadedPhoto(imagePath);
-        final errorMap = (data is Map && data['error'] is Map)
-            ? data['error'] as Map
-            : null;
-        final errCode = errorMap?['code'];
-        final errMsg = errorMap?['message'];
+      if (status == 200 && data != null) {
+        final payload = Map<String, dynamic>.from(data as Map);
+        final analysisData = payload['data'] != null
+            ? Map<String, dynamic>.from(payload['data'] as Map)
+            : payload;
 
-        if (errCode == 'NOT_FOOD') {
+        final isFood = analysisData['is_food'] as bool? ?? true;
+        if (!isFood) {
+          await deleteUploadedPhoto(imagePath);
           throw const AppException(
             code: 'NOT_FOOD',
             message:
@@ -116,38 +119,29 @@ class ScanRepo {
           );
         }
 
-        throw AppException(
-          code: errCode?.toString() ?? 'AI_ERROR',
-          message: errMsg?.toString() ?? 'AI analysis failed. Please try again.',
+        return ScanAnalysis.fromJson(
+          analysisData,
+          imagePath: imagePath,
+          mealType: mealType,
         );
       }
-
-      final payload = Map<String, dynamic>.from(data as Map);
-      final analysisData = payload['data'] != null
-          ? Map<String, dynamic>.from(payload['data'] as Map)
-          : payload;
-
-      final isFood = analysisData['is_food'] as bool? ?? true;
-      if (!isFood) {
-        // Not food: Clean up uploaded image
-        await deleteUploadedPhoto(imagePath);
-        throw const AppException(
-          code: 'NOT_FOOD',
-          message:
-              'We could not recognize any food in this photo. This scan did not count against your limit.',
-        );
+    } catch (e) {
+      if (e is AppException && (e.code == 'LIMIT_REACHED' || e.code == 'NOT_FOOD')) {
+        rethrow;
       }
+      debugPrint('Edge function unavailable ($e). Falling back to Direct AI Analyzer...');
+    }
 
-      return ScanAnalysis.fromJson(
-        analysisData,
+    // 2. Direct AI Service fallback (runs Gemini Vision direct or smart analyzer)
+    try {
+      final aiService = FoodAIService(_prefs);
+      return await aiService.analyzeFood(
+        localFile: localFile,
         imagePath: imagePath,
         mealType: mealType,
       );
     } catch (e) {
-      if (e is! AppException) {
-        // Ensure photo cleanup on unexpected errors
-        await deleteUploadedPhoto(imagePath);
-      }
+      debugPrint('Direct AI Service error: $e');
       throw AppException.fromError(e);
     }
   }

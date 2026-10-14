@@ -36,7 +36,10 @@ final mealsRepoProvider = Provider<MealsRepo>((ref) {
 });
 
 final scanRepoProvider = Provider<ScanRepo>((ref) {
-  return ScanRepo(ref.watch(supabaseClientProvider));
+  return ScanRepo(
+    ref.watch(supabaseClientProvider),
+    ref.watch(sharedPreferencesProvider),
+  );
 });
 
 final subscriptionRepoProvider = Provider<SubscriptionRepo>((ref) {

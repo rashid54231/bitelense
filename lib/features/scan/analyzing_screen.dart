@@ -97,10 +97,11 @@ class _AnalyzingScreenState extends ConsumerState<AnalyzingScreen>
         return;
       }
 
-      // 2. Call analyze-meal edge function
+      // 2. Call analyze-meal edge function with direct Gemini Vision fallback
       final analysis = await scanRepo.analyzeMeal(
         imagePath: path,
         mealType: widget.mealType,
+        localFile: widget.file,
       );
 
       if (_isCancelled) {
