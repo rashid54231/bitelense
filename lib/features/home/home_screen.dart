@@ -9,7 +9,6 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/utils/formatters.dart';
 import '../../core/widgets/calorie_ring.dart';
-import '../../core/widgets/empty_state.dart';
 import '../../core/widgets/glass_card.dart';
 import '../../core/widgets/loading_skeleton.dart';
 import '../../core/widgets/macro_chip.dart';
@@ -84,22 +83,60 @@ class HomeScreen extends ConsumerWidget {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                      // User Avatar & Greeting
+                      Row(
                         children: [
-                          Text(
-                            _getGreeting(),
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: isDark
-                                  ? AppColors.darkTextSecondary
-                                  : AppColors.lightTextSecondary,
-                              fontWeight: FontWeight.w500,
+                          Container(
+                            width: 44,
+                            height: 44,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              gradient: LinearGradient(
+                                colors: [
+                                  AppColors.primaryGreen.withValues(alpha: 0.25),
+                                  AppColors.primaryTeal.withValues(alpha: 0.15),
+                                ],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              border: Border.all(
+                                color: AppColors.primaryGreen.withValues(alpha: 0.4),
+                                width: 1.5,
+                              ),
+                            ),
+                            child: Center(
+                              child: Text(
+                                displayName.isNotEmpty ? displayName[0].toUpperCase() : 'B',
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w800,
+                                  color: AppColors.primaryGreen,
+                                ),
+                              ),
                             ),
                           ),
-                          Text(
-                            displayName,
-                            style: AppTextStyles.titleLarge(context),
+                          const SizedBox(width: 12),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                _getGreeting(),
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: isDark
+                                      ? AppColors.darkTextSecondary
+                                      : AppColors.lightTextSecondary,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              Text(
+                                displayName,
+                                style: AppTextStyles.titleMedium(context).copyWith(
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: -0.2,
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
@@ -111,43 +148,44 @@ class HomeScreen extends ConsumerWidget {
                         },
                         child: Container(
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
+                            horizontal: 14,
+                            vertical: 8,
                           ),
                           decoration: BoxDecoration(
-                            color: isPro
-                                ? AppColors.primaryTeal.withValues(alpha: 0.2)
-                                : AppColors.primaryGreen.withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(20),
+                            gradient: LinearGradient(
+                              colors: isPro
+                                  ? [
+                                      AppColors.primaryTeal.withValues(alpha: 0.25),
+                                      AppColors.primaryTeal.withValues(alpha: 0.1),
+                                    ]
+                                  : [
+                                      AppColors.primaryGreen.withValues(alpha: 0.2),
+                                      AppColors.primaryTeal.withValues(alpha: 0.08),
+                                    ],
+                            ),
+                            borderRadius: BorderRadius.circular(24),
                             border: Border.all(
                               color: isPro
-                                  ? AppColors.primaryTeal
-                                  : AppColors.primaryGreen.withValues(alpha: 0.5),
+                                  ? AppColors.primaryTeal.withValues(alpha: 0.6)
+                                  : AppColors.primaryGreen.withValues(alpha: 0.4),
+                              width: 1.2,
                             ),
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Icon(
-                                isPro
-                                    ? Icons.stars_rounded
-                                    : Icons.bolt_rounded,
+                                isPro ? Icons.stars_rounded : Icons.bolt_rounded,
                                 size: 16,
-                                color: isPro
-                                    ? AppColors.primaryTeal
-                                    : AppColors.primaryGreen,
+                                color: isPro ? AppColors.primaryTeal : AppColors.primaryGreen,
                               ),
-                              const SizedBox(width: 4),
+                              const SizedBox(width: 5),
                               Text(
-                                isPro
-                                    ? 'PRO'
-                                    : '$remainingScans ${AppStrings.scansLeftToday}',
+                                isPro ? 'PRO' : '$remainingScans left today',
                                 style: TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w700,
-                                  color: isPro
-                                      ? AppColors.primaryTeal
-                                      : AppColors.primaryGreen,
+                                  color: isPro ? AppColors.primaryTeal : AppColors.primaryGreen,
                                 ),
                               ),
                             ],
@@ -159,38 +197,126 @@ class HomeScreen extends ConsumerWidget {
                 ),
               ),
 
-              // Animated Calorie Ring Section
+              // Hero Calorie Dashboard Card
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  child: Center(
-                    child: CalorieRing(
-                      eaten: totalCalories.round(),
-                      goal: calorieGoal,
-                      size: 200,
+                  padding: const EdgeInsets.fromLTRB(18, 6, 18, 14),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: isDark
+                            ? [
+                                const Color(0xFF131D26),
+                                const Color(0xFF0F1720),
+                              ]
+                            : [
+                                Colors.white,
+                                const Color(0xFFF8FAFC),
+                              ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(28),
+                      border: Border.all(
+                        color: isDark
+                            ? AppColors.primaryGreen.withValues(alpha: 0.15)
+                            : AppColors.primaryGreen.withValues(alpha: 0.25),
+                        width: 1.2,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: isDark
+                              ? Colors.black.withValues(alpha: 0.45)
+                              : Colors.grey.withValues(alpha: 0.10),
+                          blurRadius: 20,
+                          offset: const Offset(0, 6),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      children: [
+                        // Animated Calorie Ring in Center
+                        Center(
+                          child: CalorieRing(
+                            eaten: totalCalories.round(),
+                            goal: calorieGoal,
+                            size: 190,
+                            strokeWidth: 14,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Quick 3-Metric Summary Bar
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                          decoration: BoxDecoration(
+                            color: isDark
+                                ? Colors.white.withValues(alpha: 0.04)
+                                : Colors.black.withValues(alpha: 0.03),
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceAround,
+                            children: [
+                              _metricItem(
+                                label: 'Eaten',
+                                value: '${totalCalories.round()}',
+                                unit: 'kcal',
+                                color: AppColors.primaryGreen,
+                                isDark: isDark,
+                              ),
+                              Container(
+                                height: 26,
+                                width: 1,
+                                color: isDark ? Colors.white12 : Colors.black12,
+                              ),
+                              _metricItem(
+                                label: 'Remaining',
+                                value: '${(calorieGoal - totalCalories.round()).clamp(0, calorieGoal)}',
+                                unit: 'kcal',
+                                color: AppColors.primaryTeal,
+                                isDark: isDark,
+                              ),
+                              Container(
+                                height: 26,
+                                width: 1,
+                                color: isDark ? Colors.white12 : Colors.black12,
+                              ),
+                              _metricItem(
+                                label: 'Daily Goal',
+                                value: '$calorieGoal',
+                                unit: 'kcal',
+                                color: isDark ? Colors.white70 : Colors.black87,
+                                isDark: isDark,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
               ),
 
-              // Macro Distribution Row
+              // Macro Distribution Row (Zero Overflow Guaranteed)
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  padding: const EdgeInsets.symmetric(horizontal: 18),
                   child: Row(
                     children: [
                       Expanded(
                         child: MacroChip.protein(totalProtein),
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: 6),
                       Expanded(
                         child: MacroChip.carbs(totalCarbs),
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: 6),
                       Expanded(
                         child: MacroChip.fat(totalFat),
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: 6),
                       Expanded(
                         child: MacroChip.fiber(totalFiber),
                       ),
@@ -202,21 +328,31 @@ class HomeScreen extends ConsumerWidget {
               // Today's Meals Header
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 28, 20, 12),
+                  padding: const EdgeInsets.fromLTRB(20, 24, 20, 10),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
                         AppStrings.today,
-                        style: AppTextStyles.titleMedium(context),
+                        style: AppTextStyles.titleMedium(context).copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
-                      Text(
-                        '${meals.length} logged',
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: isDark
-                              ? AppColors.darkTextMuted
-                              : AppColors.lightTextMuted,
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.05),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          '${meals.length} logged',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: isDark
+                                ? AppColors.darkTextSecondary
+                                : AppColors.lightTextSecondary,
+                          ),
                         ),
                       ),
                     ],
@@ -224,10 +360,10 @@ class HomeScreen extends ConsumerWidget {
                 ),
               ),
 
-              // Meal List or Empty / Loading State
+              // Meal List or Clean Non-overlapping Empty State
               if (mealsAsync.isLoading && meals.isEmpty)
                 SliverPadding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  padding: const EdgeInsets.symmetric(horizontal: 18),
                   sliver: SliverList(
                     delegate: SliverChildBuilderDelegate(
                       (context, i) => LoadingSkeleton.mealItemSkeleton(context),
@@ -238,17 +374,66 @@ class HomeScreen extends ConsumerWidget {
               else if (meals.isEmpty)
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.all(20),
-                    child: EmptyState(
-                      icon: Icons.dinner_dining_rounded,
-                      title: AppStrings.noMealsLoggedToday,
-                      description: AppStrings.snapMealPrompt,
+                    padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 22),
+                      decoration: BoxDecoration(
+                        color: isDark ? const Color(0xFF131A22) : Colors.white,
+                        borderRadius: BorderRadius.circular(22),
+                        border: Border.all(
+                          color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: isDark ? Colors.black26 : Colors.black.withValues(alpha: 0.04),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        children: [
+                          Container(
+                            width: 52,
+                            height: 52,
+                            decoration: BoxDecoration(
+                              color: AppColors.primaryGreen.withValues(alpha: 0.12),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.restaurant_rounded,
+                              size: 26,
+                              color: AppColors.primaryGreen,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            AppStrings.noMealsLoggedToday,
+                            textAlign: TextAlign.center,
+                            style: AppTextStyles.titleSmall(context).copyWith(
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            AppStrings.snapMealPrompt,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: isDark
+                                  ? AppColors.darkTextSecondary
+                                  : AppColors.lightTextSecondary,
+                              height: 1.35,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 )
               else
                 SliverPadding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  padding: const EdgeInsets.symmetric(horizontal: 18),
                   sliver: SliverList(
                     delegate: SliverChildBuilderDelegate(
                       (context, index) {
@@ -260,9 +445,9 @@ class HomeScreen extends ConsumerWidget {
                   ),
                 ),
 
-              // Bottom padding for Floating Action Button
+              // Bottom padding so content scrolls completely clear of navigation bar
               const SliverToBoxAdapter(
-                child: SizedBox(height: 90),
+                child: SizedBox(height: 100),
               ),
             ],
           ),
@@ -277,52 +462,96 @@ class HomeScreen extends ConsumerWidget {
         },
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      floatingActionButton: Padding(
-        padding: const EdgeInsets.only(bottom: 12),
-        child: Container(
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.primaryGreen.withValues(alpha: 0.4),
-                blurRadius: 20,
-                offset: const Offset(0, 6),
-              ),
-            ],
-          ),
-          child: FloatingActionButton.large(
-            onPressed: () {
+      floatingActionButton: Container(
+        width: 62,
+        height: 62,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          gradient: AppColors.accentGradient,
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.primaryGreen.withValues(alpha: 0.45),
+              blurRadius: 18,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () {
               if (!isPro && remainingScans <= 0) {
                 context.push('/paywall');
               } else {
                 context.push('/scan');
               }
             },
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-            child: Ink(
-              decoration: const BoxDecoration(
-                gradient: AppColors.accentGradient,
-                shape: BoxShape.circle,
-              ),
-              child: const Center(
-                child: Icon(
-                  Icons.camera_alt_rounded,
-                  color: Colors.white,
-                  size: 36,
-                ),
+            customBorder: const CircleBorder(),
+            child: const Center(
+              child: Icon(
+                Icons.camera_alt_rounded,
+                color: Colors.white,
+                size: 28,
               ),
             ),
           ),
-        )
-            .animate(onPlay: (controller) => controller.repeat(reverse: true))
-            .scaleXY(
-              begin: 1.0,
-              end: 1.04,
-              duration: 1800.ms,
-              curve: Curves.easeInOut,
+        ),
+      )
+          .animate(onPlay: (controller) => controller.repeat(reverse: true))
+          .scaleXY(
+            begin: 1.0,
+            end: 1.04,
+            duration: 1800.ms,
+            curve: Curves.easeInOut,
+          ),
+    );
+  }
+
+  Widget _metricItem({
+    required String label,
+    required String value,
+    required String unit,
+    required Color color,
+    required bool isDark,
+  }) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w500,
+            color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
+            letterSpacing: 0.2,
+          ),
+        ),
+        const SizedBox(height: 3),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.baseline,
+          textBaseline: TextBaseline.alphabetic,
+          children: [
+            Text(
+              value,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w800,
+                color: color,
+              ),
             ),
-      ),
+            const SizedBox(width: 2),
+            Text(
+              unit,
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w500,
+                color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }
